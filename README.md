@@ -20,3 +20,6 @@ Upload the contents of the folder (not the folder itself) so `index.html` is at 
 ## Changing the skills
 
 The ten skills are listed near the end of `index.html` in the `SKILLS` list (id, title and short tag). The id is also the default rank.
+
+## Shared IDs
+The Excel download now includes a "Workmatik data" sheet listing tool details and stable skill IDs (MS01 to MS10). The Data and Matrix sheets are unchanged.

@@ -553,6 +553,16 @@ async function buildWorkbook(){
   mx.addImage(imgId,{tl:{col:2,row:FIRST-1},br:{col:13,row:LAST},editAs:'twoCell'});
   mx.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:1,paperSize:9};
 
+  /* Workmatik data sheet: tool details and stable skill IDs, so other Workmatik tools can match on them. Data and Matrix are unchanged. */
+  var wd=wb.addWorksheet('Workmatik data',{properties:{tabColor:{argb:GREY}}});
+  wd.columns=[{width:26},{width:90},{width:14},{width:16},{width:12},{width:10}];
+  [['Field','Value'],['Tool','Workmatik Marketing Skills Map'],['Tool key','skillsmap'],['Data version','1.0.0'],['Schema','workmatik-shared-ids-1'],['Organisation',client],['Assessment date',today()],['Note','Skill IDs (MS01 to MS10) are stable. Other Workmatik tools match on these IDs.']].forEach(function(r){wd.addRow(r);});
+  wd.addRow([]);
+  var sh=wd.addRow(['Skill ID','Skill title','Skill tag','Default rank','Organisation rank','Coverage']);
+  R.slice().sort(function(x,y){return x.id-y.id;}).forEach(function(r){wd.addRow(['MS'+(r.id<10?'0':'')+r.id,r.title,r.tag,r.def,r.rank,r.cov]);});
+  [wd.getRow(1),sh].forEach(function(row){row.eachCell(function(c){c.font={name:F,bold:true,color:{argb:WHITE}};c.fill=solid(INK);});});
+  wd.eachRow(function(row,n){if(n>1&&row!==sh)row.eachCell(function(c){if(!c.font||!c.font.bold)c.font={name:F,size:11};c.alignment={vertical:'top',wrapText:true};});});
+
   return wb.xlsx.writeBuffer();
 }
 $('dl').addEventListener('click',async function(){
