@@ -160,6 +160,22 @@ td.bar{width:34%}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 @media print{.skip,.steps,.actions,.no-print{display:none !important}.mx-wrap{overflow:visible}.site-header{background:#fff;border-bottom:2px solid var(--orange)}.privacy-chip{background:none}}
+
+/* tabs (same pattern as the other Workmatik tools) */
+.tabwrap{max-width:1120px;margin:0 auto;padding:20px 24px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--grey)}
+.tab{font:inherit;font-size:16px;font-weight:600;background:none;border:0;padding:10px 16px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab:hover{color:var(--navy)}
+.tab[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--orange)}
+.tkpanel{max-width:1120px;margin:0 auto;padding:28px 24px 72px}
+.tkpanel[hidden]{display:none}
+.tkpanel .card{border:1px solid var(--grey);border-radius:10px;padding:18px 22px;margin-bottom:16px}
+.tkpanel .card h2{font-size:22px;color:var(--navy);margin:0 0 10px}
+.tkpanel .card p{margin:0 0 10px;font-size:17px}
+.tkpanel .card ol{margin:0;padding-left:22px}.tkpanel .card li{margin-bottom:8px}
+.tkpanel .hint{font-size:14px;color:var(--muted)}
+#tkmsg{margin-top:10px;font-size:15px}
+@media print{.tabwrap{display:none}}
 </style>
 </head>
 <body>
@@ -176,6 +192,13 @@ td.bar{width:34%}
   </div>
 </header>
 
+<div class="tabwrap"><div class="tabs" role="tablist" aria-label="Sections">
+  <button class="tab" role="tab" id="tab-map" aria-controls="panel-map" aria-selected="true">Skills Map</button>
+  <button class="tab" role="tab" id="tab-guide" aria-controls="panel-guide" aria-selected="false" tabindex="-1">How to use</button>
+  <button class="tab" role="tab" id="tab-toolkit" aria-controls="panel-toolkit" aria-selected="false" tabindex="-1">Back to AI Toolkit</button>
+</div></div>
+
+<div id="panel-map" role="tabpanel" aria-labelledby="tab-map">
 <ol class="steps" id="steps" aria-label="Progress">
   <li data-s="1"><b>1</b>Organisation</li>
   <li data-s="2"><b>2</b>Prioritise skills</li>
@@ -237,6 +260,32 @@ td.bar{width:34%}
     <div class="res-grid"><table id="tbl"></table></div>
   </section>
 </main>
+</div>
+
+<section class="tkpanel" id="panel-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
+  <div class="card"><h2>What this tool does</h2><p>It turns your view of the ten marketing skills that matter most into a visual map. You rank the skills by importance to your strategy, rate how well your team covers each one, and see where the gaps are.</p></div>
+  <div class="card"><h2>Using the tool</h2>
+    <ol>
+      <li><strong>Organisation.</strong> Enter your organisation or company name.</li>
+      <li><strong>Prioritise skills.</strong> Rank the ten skills in the order that matters most for delivering your strategy. Use the arrows to move a skill up or down.</li>
+      <li><strong>Rate skills coverage.</strong> For each skill, estimate your team&rsquo;s current capability.</li>
+      <li><strong>Marketing Skills Map.</strong> See your skills on one map. Skills that rank high but have low coverage are your gaps. Select <em>Download Excel workbook</em> to keep the result.</li>
+    </ol>
+    <p class="hint" style="margin-top:10px">Nothing is stored. Download the workbook before you close the page.</p>
+  </div>
+  <div class="card"><h2>Back to AI Toolkit</h2><p>The last tab, <em>Back to AI Toolkit</em>, takes you back to the Workmatik AI Toolkit: the guided path through all the Workmatik tools. Open it when you have finished here and want the next step. It shows what to do next and where to load your downloaded files to build the overall strategy.</p><p class="hint">Opening it does not save anything. Download your results first, because this page does not keep them once you leave it.</p></div>
+</section>
+
+<section class="tkpanel" id="panel-toolkit" role="tabpanel" aria-labelledby="tab-toolkit" hidden>
+  <div class="card">
+    <h2>Back to the AI Toolkit</h2>
+    <p>The AI Toolkit guides you through the Workmatik AI Assessments in sequence and joins your downloaded files into one AI strategy.</p>
+    <p><strong>Before you leave:</strong> Use the &lsquo;Download Results&rsquo; button to save your current assessment if you haven&rsquo;t already. This page does not keep your scores once you close it.</p>
+    <div class="actions"><button class="btn" id="btnDownloadToolkit" type="button">Download Results (XLSX)</button> <a class="btn primary" style="text-decoration:none;color:#0D0D0D" href="https://scottstockwellworkmatik.github.io/workmatik-ai-toolkit/">Back to AI Toolkit</a></div>
+    <p id="tkmsg" role="status"></p>
+  </div>
+</section>
+
 
 <footer class="site-footer">
   <div class="wrap">
@@ -579,6 +628,24 @@ $('dl').addEventListener('click',async function(){
   }catch(err){msg.textContent='The workbook could not be created: '+err.message;}
   btn.disabled=false;
 });
+
+
+/* tabs and toolkit download */
+(function(){
+  var ids=['map','guide','toolkit'];
+  function showTab(n){ids.forEach(function(t){var on=t===n;var b=$('tab-'+t);b.setAttribute('aria-selected',on?'true':'false');b.tabIndex=on?0:-1;$('panel-'+t).hidden=!on;});window.scrollTo(0,0);}
+  ids.forEach(function(t,i){
+    $('tab-'+t).addEventListener('click',function(){showTab(t);});
+    $('tab-'+t).addEventListener('keydown',function(e){var k=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!k)return;var n=ids[(i+k+ids.length)%ids.length];showTab(n);$('tab-'+n).focus();});
+  });
+  $('btnDownloadToolkit').addEventListener('click',function(){
+    var done=Object.keys(state.cov).length>=SKILLS.length;
+    if(!done){$('tkmsg').textContent='There is no finished map to download yet. Go to the Skills Map tab, finish rating coverage, then use Download Excel workbook.';return;}
+    $('tkmsg').textContent='';
+    $('dl').click();
+    $('tkmsg').textContent='Your workbook is downloading.';
+  });
+})();
 
 /* test hook (harmless in production) */
 window.__skillMap={state:state,show:show,build:buildWorkbook};
