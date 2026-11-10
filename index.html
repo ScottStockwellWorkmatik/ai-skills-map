@@ -21,6 +21,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Skills Map">
 <link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="css/workmatik-shared.css?v=1">
 <style>
 :root{
   --orange:#F25D27; --sky:#5DC1FF; --navy:#024873; --mist:#EAF9FF; --grey:#D9D9D9; --ink:#0D0D0D;
@@ -191,6 +192,7 @@ td.bar{width:34%}
     <p class="privacy-chip" title="No data is sent to a server or stored by this page">Runs in your browser. Nothing is sent or stored.</p>
   </div>
 </header>
+<div id="orgBlock"></div>
 
 <div class="tabwrap"><div class="tabs" role="tablist" aria-label="Sections">
   <button class="tab" role="tab" id="tab-map" aria-controls="panel-map" aria-selected="true">Skills Map</button>
@@ -211,12 +213,13 @@ td.bar{width:34%}
   <section class="panel" id="p1" aria-labelledby="h1">
     <h2 id="h1" tabindex="-1">Map your team's skills</h2>
     <ol class="how">
-      <li>Enter your organisation / company name.</li>
+      <li>Enter your organisation at the top of the page.</li>
       <li>Rank the top 10 marketing skills for 2027 that will help you deliver your strategy.</li>
       <li>For each skill, estimate your team's current capability.</li>
       <li>This will give you a visual map of your skills that you can also download.</li>
     </ol>
-    <label class="field"><span>Organisation name</span><input id="client" type="text" autocomplete="organization" maxlength="80"></label>
+    <input type="hidden" id="client">
+    <p class="hint" id="orgHint">Enter the organisation in the box at the top of the page to continue.</p>
     <div class="actions"><button class="btn primary" id="go1" disabled>Start ranking</button></div>
   </section>
 
@@ -340,6 +343,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
  */function n(e){return e>=65&&e<=90||95===e||e>=97&&e<=122||e>=192&&e<=214||e>=216&&e<=246||e>=248&&e<=767||e>=880&&e<=893||e>=895&&e<=8191||e>=8204&&e<=8205||e>=8304&&e<=8591||e>=11264&&e<=12271||e>=12289&&e<=55295||e>=63744&&e<=64975||e>=65008&&e<=65533||e>=65536&&e<=983039}Object.defineProperty(r,"__esModule",{value:!0}),r.NC_NAME_START_CHAR="A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\ud800\udc00-\udb7f\udfff",r.NC_NAME_CHAR="-"+r.NC_NAME_START_CHAR+".0-9\xb7\u0300-\u036f\u203f-\u2040",r.NC_NAME_START_CHAR_RE=new RegExp("^["+r.NC_NAME_START_CHAR+"]$","u"),r.NC_NAME_CHAR_RE=new RegExp("^["+r.NC_NAME_CHAR+"]$","u"),r.NC_NAME_RE=new RegExp("^["+r.NC_NAME_START_CHAR+"]["+r.NC_NAME_CHAR+"]*$","u"),r.isNCNameStartChar=n,r.isNCNameChar=function(e){return n(e)||45===e||46===e||e>=48&&e<=57||183===e||e>=768&&e<=879||e>=8255&&e<=8256}},{}]},{},[15])(15)}));
 //# sourceMappingURL=exceljs.min.js.map
 </script>
+<script src="js/workmatik-shared.js?v=1"></script>
 <script>
 (function(){
 'use strict';
@@ -380,11 +384,12 @@ function show(n){
 }
 
 /* ---------- step 1 ---------- */
-$('client').addEventListener('input',function(){
-  state.client=this.value.trim();
-  $('go1').disabled=!state.client;
-});
-$('client').addEventListener('keydown',function(e){if(e.key==='Enter'&&state.client)show(2);});
+Workmatik.renderOrgBlock($('orgBlock'));
+function syncOrg(c){
+  state.client=(c.org||'').trim();$('client').value=state.client;
+  $('go1').disabled=!state.client;$('orgHint').hidden=!!state.client;
+}
+Workmatik.onChange(syncOrg);syncOrg(Workmatik.get());
 $('go1').addEventListener('click',function(){show(2);});
 
 /* ---------- step 2: rank ---------- */
@@ -524,9 +529,9 @@ window.addEventListener('resize',function(){if(state.step===4)keepPillsInside();
 $('edit-rank').addEventListener('click',function(){show(2);});
 $('edit-cov').addEventListener('click',function(){show(3);});
 $('restart').addEventListener('click',function(){
-  if(!window.confirm('Start a new map? The current ranking and scores will be cleared.'))return;
-  state.client='';state.order=SKILLS.map(function(s){return s.id;});state.cov={};
-  $('client').value='';$('go1').disabled=true;show(1);$('client').focus();
+  if(!window.confirm('Start a new map? The current ranking and scores will be cleared. The organisation stays.'))return;
+  state.order=SKILLS.map(function(s){return s.id;});state.cov={};
+  show(1);
 });
 
 /* ---------- Excel export ---------- */
@@ -605,7 +610,7 @@ async function buildWorkbook(){
   /* Workmatik data sheet: tool details and stable skill IDs, so other Workmatik tools can match on them. Data and Matrix are unchanged. */
   var wd=wb.addWorksheet('Workmatik data',{properties:{tabColor:{argb:GREY}}});
   wd.columns=[{width:26},{width:90},{width:14},{width:16},{width:12},{width:10}];
-  [['Field','Value'],['Tool','Workmatik Marketing Skills Map'],['Tool key','skillsmap'],['Data version','1.0.0'],['Schema','workmatik-shared-ids-1'],['Organisation',client],['Assessment date',today()],['Note','Skill IDs (MS01 to MS10) are stable. Other Workmatik tools match on these IDs.']].forEach(function(r){wd.addRow(r);});
+  Workmatik.metaRows('Workmatik Marketing Skills Map','skillsmap','1.0.0',[['Assessment date',today()],['Note','Skill IDs (MS01 to MS10) are stable. Other Workmatik tools match on these IDs.']]).forEach(function(r){wd.addRow(r);});
   wd.addRow([]);
   var sh=wd.addRow(['Skill ID','Skill title','Skill tag','Default rank','Organisation rank','Coverage']);
   R.slice().sort(function(x,y){return x.id-y.id;}).forEach(function(r){wd.addRow(['MS'+(r.id<10?'0':'')+r.id,r.title,r.tag,r.def,r.rank,r.cov]);});
@@ -615,13 +620,14 @@ async function buildWorkbook(){
   return wb.xlsx.writeBuffer();
 }
 $('dl').addEventListener('click',async function(){
+  if(!Workmatik.requireOrg())return;
   var btn=this,msg=$('dlmsg');
   if(typeof ExcelJS==='undefined'){msg.textContent='The Excel library did not load. Reload the page and try again.';return;}
   btn.disabled=true;msg.textContent='Building workbook...';
   try{
     var buf=await buildWorkbook();
     var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    var name='Marketing Skills Map - '+safeName(state.client)+' - '+new Date().toISOString().slice(0,10)+'.xlsx';
+    var name=Workmatik.fileName('skillsmap');
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},2000);
     msg.textContent='Downloaded '+name;
